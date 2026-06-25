@@ -75,21 +75,18 @@ int n = x.size();
         }
     }
 
-    double residual = 0.0;
+    double rmse = 0.0;
 
     for (int i = 0; i < n; i++){
-        double y_hat = 0.0;
-        for(int j = 0; j < 2; j++){
-            y_hat += A[i][j] * ols[j];
-        }
-        residual += pow(y_hat - y[i], 2);
+        double y_hat = ols[0] + ols[1] * x[i];
+        rmse += pow(y_hat - y[i], 2);
     }
 
-    residual = sqrt(residual);
+    rmse = sqrt(rmse);
 
     cout << "intercept: " << ols[0] << "\n";
     cout << "slope: " << ols[1] << "\n";
-    cout << "residual: " << residual << "\n";
+    cout << "rmse: " << rmse << "\n";
 
     ofstream file("ols_cpp_output.csv");
     file << "x,y,y_hat\n";
