@@ -6,13 +6,12 @@
 
 using namespace std;
 
-int n = 20;
-
 int main() {
   // set up system
 vector<double> x = {1, 3, 4, 6, 7, 8, 10, 11, 13, 14, 15, 17, 18, 20, 21, 22, 24, 25, 27, 28};
 vector<double> y = {3.2, 7.1, 6.4, 9.8, 8.3, 12.5, 11.2, 14.7, 13.1, 17.4, 15.9, 18.2, 20.6, 19.3, 22.8, 21.4, 24.1, 26.7, 25.3, 28.9};
 
+int n = x.size();
 
     vector<vector<double>> A(n, vector<double>(2, 0.0));
 
