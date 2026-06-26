@@ -82,7 +82,7 @@ int n = x.size();
         rmse += pow(y_hat - y[i], 2);
     }
 
-    rmse = sqrt(rmse);
+    rmse = sqrt(rmse/n);
 
     cout << "intercept: " << ols[0] << "\n";
     cout << "slope: " << ols[1] << "\n";
