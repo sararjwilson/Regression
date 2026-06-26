@@ -12,18 +12,18 @@ using namespace Eigen;
 int main() {
 
 // polynomial deg
-int n = 2;
+int n = 1;
 
 // standard dev and correlation btwn adjacent errors
-double sigma = 5.0;
-double rho = 0.95;
+double sigma = 15.0;
+double rho = 0.5;
 
 // data
 int m = 50;
 
 VectorXd x(m), y_clean(m);
 for (int i = 0; i < m; i++) x(i) = i;
-for (int i = 0; i < m; i++) y_clean(i) = 1 + 2*x(i) + 3*pow(x(i), 2);
+for (int i = 0; i < m; i++) y_clean(i) = 10 + 3*x(i);
 
 // noise
 default_random_engine gen(42);
