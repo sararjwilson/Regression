@@ -15,7 +15,8 @@ const double rho = 28;
 const double beta = 8.0/3.0;
 double tol = numeric_limits<double>::epsilon();
 
-Vector3d f(const Vector3d& state) {
+// direct ode computation
+Vector3d ode_rhs(const Vector3d& state) {
 // system dynamics:
 // ẋ = σ(y − x)
 // ẏ = x(ρ − z) − y
@@ -32,19 +33,19 @@ Vector3d f(const Vector3d& state) {
     return Vector3d(xdot, ydot, zdot);
 }
 
-// RK4
+// RK4 to generate data
 Vector3d rk4step(const Vector3d& state, double dt) {
 
-    Vector3d k1 = f(state);
-    Vector3d k2 = f(state + k1 * (dt/2));
-    Vector3d k3 = f(state + k2 * (dt/2));
-    Vector3d k4 = f(state + k3 * dt);
+    Vector3d k1 = ode_rhs(state);
+    Vector3d k2 = ode_rhs(state + k1 * (dt/2));
+    Vector3d k3 = ode_rhs(state + k2 * (dt/2));
+    Vector3d k4 = ode_rhs(state + k3 * dt);
 
     Vector3d state_next = state + (dt/6)*(k1 + 2*k2 + 2*k3 + k4);
     return state_next;
 }
 
-// central difference
+// central difference for derivative terms in candidate library
 vector<Vector3d> fd(const vector<Vector3d>& states, double dt) {
     int n = states.size();
     vector<Vector3d> fd_est;
@@ -56,9 +57,10 @@ vector<Vector3d> fd(const vector<Vector3d>& states, double dt) {
     return fd_est;
 }
 
-// noise
+// noise generation
 vector<Vector3d> add_noise(const vector<Vector3d>& states, double noise_lvl){
-    default_random_engine generator;
+    static random_device rd;
+    static default_random_engine generator(rd());
     normal_distribution<double> distribution(0.0, noise_lvl);
     vector<Vector3d> states_noise(states.size());
 
@@ -95,12 +97,13 @@ MatrixXd build_library(const vector<Vector3d>& states){
     return Theta;
 }
 
-VectorXd build_target(const vector<Vector3d>& states, int component){
+// collection of derivatives evaluated at each time step
+VectorXd ground_truth_derivatives(const vector<Vector3d>& states, int component){
     int n = states.size();
     VectorXd target(n); 
 
     for (int i = 0; i < n; i++){
-        Vector3d derivative = f(states[i]);
+        Vector3d derivative = ode_rhs(states[i]);
         target(i) = derivative(component);
     }
     return target;
@@ -161,6 +164,9 @@ void print_equation(const VectorXd& xi, const string& state_name) {
     cout << "\n";
 }
 
+// residuals
+
+
 int main() {
     // set-up
     double dt = 0.01;
@@ -203,20 +209,14 @@ int main() {
     vector<Vector3d> states_noise_matched(states_noise.begin() + 1, states_noise.end() - 1);
     MatrixXd Theta_noise = build_library(states_noise_matched);
 
-    VectorXd xdot_target = build_target(states,0);
-    VectorXd ydot_target = build_target(states,1);
-    VectorXd zdot_target = build_target(states,2);
+    VectorXd xdot_target = ground_truth_derivatives(states,0);
+    VectorXd ydot_target = ground_truth_derivatives(states,1);
+    VectorXd zdot_target = ground_truth_derivatives(states,2);
 
-    // initial ols
+    // optional clean test data - unused as is
     VectorXd xi_x = Theta.householderQr().solve(xdot_target);
     VectorXd xi_y = Theta.householderQr().solve(ydot_target);
     VectorXd xi_z = Theta.householderQr().solve(zdot_target);
-
-    vector<int> indices(10);
-
-    for (int i = 0; i < 10; i++){
-        indices[i] = i;
-    }
 
     // stlsq
     VectorXd xi_x_final = stlsq(Theta_noise, xdot_target_noise, 0.5);
@@ -226,7 +226,10 @@ int main() {
     print_equation(xi_x_final, "x");
     print_equation(xi_y_final, "y");
     print_equation(xi_z_final, "z");
-    
+
+    // error analysis
+    //residuals
+
     // export to plot
     ofstream outfile("lorenz_data.csv");
     outfile << "t,x,y,z\n";
