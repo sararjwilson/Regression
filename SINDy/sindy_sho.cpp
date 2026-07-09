@@ -57,7 +57,7 @@ vector<Vector2d> add_noise(const vector<Vector2d>& trajs, double noise_lvl){
     vector<Vector2d> trajs_noise(trajs.size());
 
     for(int i = 0; i < trajs.size(); i++){
-        double x_noise = distribution(generator); // noise gen should just be on x? ask about this
+        double x_noise = distribution(generator);
         double v_noise = distribution(generator);
 
         trajs_noise[i] = Vector2d(trajs[i](0) + x_noise, trajs[i](1) + v_noise);
